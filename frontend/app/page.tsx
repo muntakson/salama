@@ -316,15 +316,11 @@ export default function Home() {
               </p>
             </Col>
             <Col md={6} className="text-md-end">
-              <p>
-                <span suppressHydrationWarning>
-                  {mounted && language === 'ko' ? '이메일' : mounted && language === 'sw' ? 'Barua pepe' : 'Email'}
-                </span>: support@salama-training.org
+              <p suppressHydrationWarning>
+                {mounted && language === 'ko' ? '이메일' : mounted && language === 'sw' ? 'Barua pepe' : 'Email'}: support@salama-training.org
               </p>
-              <p>
-                <span suppressHydrationWarning>
-                  {mounted && language === 'ko' ? '전화' : mounted && language === 'sw' ? 'Simu' : 'Phone'}
-                </span>: +261 XX XXX XXXX
+              <p suppressHydrationWarning>
+                {mounted && language === 'ko' ? '전화' : mounted && language === 'sw' ? 'Simu' : 'Phone'}: +261 XX XXX XXXX
               </p>
             </Col>
           </Row>

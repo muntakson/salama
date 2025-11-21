@@ -25,7 +25,7 @@ Addressing the critical shortage of essential medical equipment and lack of equi
 
 - **Backend (Flask)**: Port 5045
 - **Frontend (Next.js)**: Port 3006
-- **Domain**: salame.aiedus.org (also accessible via salama.aiedus.org)
+- **Domain**: salama.aiedus.org
 
 ## Project Structure
 
@@ -205,11 +205,11 @@ tail -f /var/www/salama/backend/app.log
 
 # Frontend
 lsof -i :3006
-tail -f /tmp/salame-frontend.log
+tail -f /tmp/salama-frontend.log
 ```
 
 ### Nginx Configuration
-- Config file: `/etc/nginx/sites-available/salame.aiedus.org.conf`
+- Config file: `/etc/nginx/sites-available/salama.aiedus.org.conf`
 - SSL: Cloudflare Origin Certificate
 - Ports: 80 (HTTP) and 443 (HTTPS)
 - Proxies:
@@ -225,7 +225,7 @@ echo 'q1' | sudo -S systemctl reload nginx
 
 ## Admin Access
 
-- **URL**: https://salame.aiedus.org/admin
+- **URL**: https://salama.aiedus.org/admin
 - **Password**: q1
 
 ## Default Categories

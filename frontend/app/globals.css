@@ -4,6 +4,257 @@
 @tailwind components;
 @tailwind utilities;
 
+/* African/Malagasy Theme - Warm, Professional Colors */
+:root {
+  /* Primary warm earth tones */
+  --african-terracotta: #D84315;
+  --african-ochre: #E67E22;
+  --african-gold: #F39C12;
+  --african-burnt-orange: #C0632E;
+
+  /* Medical/professional colors */
+  --medical-teal: #16A085;
+  --medical-blue: #2980B9;
+  --medical-green: #27AE60;
+
+  /* Natural/neutral tones */
+  --sand-light: #FFF8E7;
+  --sand-medium: #F5E6D3;
+  --earth-brown: #8B6F47;
+  --dark-brown: #4A3728;
+
+  /* Malagasy red (from flag) */
+  --malagasy-red: #FC3D32;
+  --malagasy-green: #007E3A;
+
+  /* High contrast mode */
+  --text-primary: #2C1810;
+  --text-secondary: #5D4E3C;
+  --bg-primary: #FFF8E7;
+  --bg-card: #FFFFFF;
+  --border-color: #E8D4BA;
+  --shadow-color: rgba(139, 111, 71, 0.15);
+}
+
 body {
-  background: #f8f9fa;
+  background: linear-gradient(135deg, var(--sand-light) 0%, var(--sand-medium) 100%);
+  color: var(--text-primary);
+  font-size: 16px; /* Larger base font for readability */
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Traditional Malagasy lamba pattern border */
+.lamba-pattern {
+  border-top: 4px solid;
+  border-image: repeating-linear-gradient(
+    90deg,
+    var(--malagasy-red) 0px,
+    var(--malagasy-red) 10px,
+    var(--african-gold) 10px,
+    var(--african-gold) 20px,
+    var(--malagasy-green) 20px,
+    var(--malagasy-green) 30px,
+    var(--african-terracotta) 30px,
+    var(--african-terracotta) 40px
+  ) 1;
+}
+
+/* Card enhancements with African theme */
+.card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(192, 99, 46, 0.25);
+  border-color: var(--african-ochre);
+}
+
+/* Primary buttons with warm African colors */
+.btn-primary {
+  background: linear-gradient(135deg, var(--african-terracotta) 0%, var(--african-ochre) 100%);
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(216, 67, 21, 0.3);
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--african-burnt-orange) 0%, var(--african-terracotta) 100%);
+  box-shadow: 0 6px 12px rgba(216, 67, 21, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Success buttons with medical green */
+.btn-success {
+  background: var(--medical-green);
+  border: none;
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+.btn-success:hover {
+  background: var(--medical-teal);
+  box-shadow: 0 6px 12px rgba(22, 160, 133, 0.4);
+}
+
+/* Info buttons with medical blue */
+.btn-info {
+  background: var(--medical-blue);
+  border: none;
+}
+
+/* Navbar with lamba pattern */
+.navbar {
+  background: linear-gradient(90deg, var(--dark-brown) 0%, var(--earth-brown) 100%);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border-bottom: 4px solid var(--african-gold);
+}
+
+/* Badge colors */
+.badge {
+  font-size: 0.9rem;
+  padding: 0.4em 0.8em;
+  font-weight: 600;
+}
+
+.badge.bg-primary {
+  background: var(--african-terracotta) !important;
+}
+
+.badge.bg-success {
+  background: var(--medical-green) !important;
+}
+
+.badge.bg-info {
+  background: var(--medical-blue) !important;
+}
+
+.badge.bg-warning {
+  background: var(--african-gold) !important;
+  color: var(--dark-brown) !important;
+}
+
+/* Category tabs/pills */
+.nav-pills .nav-link.active {
+  background: var(--african-ochre);
+  box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
+}
+
+.nav-pills .nav-link:hover {
+  background: var(--african-gold);
+  color: var(--dark-brown);
+}
+
+/* Offline/Low bandwidth indicator */
+.offline-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--african-terracotta);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(216, 67, 21, 0.4);
+  z-index: 1000;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Mobile-first responsive enhancements */
+@media (max-width: 768px) {
+  body {
+    font-size: 18px; /* Larger for mobile */
+  }
+
+  .card {
+    margin-bottom: 1.5rem;
+  }
+
+  .btn {
+    min-height: 48px; /* Touch-friendly buttons */
+    font-size: 1.1rem;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+}
+
+/* High contrast mode toggle */
+.high-contrast-mode {
+  --text-primary: #000000;
+  --text-secondary: #1A1A1A;
+  --bg-primary: #FFFFFF;
+  --bg-card: #F5F5F5;
+  --border-color: #333333;
+}
+
+.high-contrast-mode .card {
+  border: 3px solid #000000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.high-contrast-mode .btn-primary {
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+}
+
+/* Loading skeleton with warm tones */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--sand-medium) 25%,
+    var(--sand-light) 50%,
+    var(--sand-medium) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Print-friendly styles */
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .card {
+    border: 2px solid #333;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+}
+
+/* Traditional pattern background (subtle) */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  z-index: -1;
+  background-image:
+    repeating-linear-gradient(45deg, var(--african-terracotta) 0px, transparent 2px, transparent 10px),
+    repeating-linear-gradient(-45deg, var(--african-gold) 0px, transparent 2px, transparent 10px);
+  pointer-events: none;
 }

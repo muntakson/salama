@@ -26,12 +26,50 @@ export default function Home() {
   const [fullScreenCard, setFullScreenCard] = useState<TrainingCardType | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     checkAdminSession();
     loadCategories();
     loadCards();
   }, [selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    setMounted(true);
+
+    // Monitor online/offline status
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Load high contrast preference
+    const savedContrast = localStorage.getItem('high_contrast');
+    if (savedContrast === 'true') {
+      setHighContrast(true);
+      document.body.classList.add('high-contrast-mode');
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const toggleHighContrast = () => {
+    const newValue = !highContrast;
+    setHighContrast(newValue);
+    localStorage.setItem('high_contrast', newValue.toString());
+
+    if (newValue) {
+      document.body.classList.add('high-contrast-mode');
+    } else {
+      document.body.classList.remove('high-contrast-mode');
+    }
+  };
 
   const checkAdminSession = async () => {
     const sessionToken = localStorage.getItem('admin_session_token');
@@ -111,10 +149,10 @@ export default function Home() {
 
   return (
     <>
-      <Navbar bg="primary" variant="dark" expand="lg" sticky="top">
+      <Navbar bg="primary" variant="dark" expand="lg" sticky="top" className="lamba-pattern">
         <Container fluid>
           <Navbar.Brand href="/" className="fw-bold">
-            Salama Medical Training
+            🏥 Salama Medical Training
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="main-navbar" />
           <Navbar.Collapse id="main-navbar">
@@ -131,6 +169,15 @@ export default function Home() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </Form>
+            <Button
+              variant="outline-light"
+              size="sm"
+              className="me-2"
+              onClick={toggleHighContrast}
+              title="Toggle High Contrast Mode"
+            >
+              {highContrast ? '🌙' : '☀️'}
+            </Button>
             <Form.Select
               value={language}
               onChange={(e) => setLanguage(e.target.value as Language)}
@@ -143,6 +190,14 @@ export default function Home() {
           </Navbar.Collapse>
         </Container>
       </Navbar>
+
+      {/* Offline Indicator */}
+      {mounted && !isOnline && (
+        <div className="offline-indicator">
+          <i className="bi bi-wifi-off me-2"></i>
+          {language === 'ko' ? '오프라인 모드' : language === 'sw' ? 'Hali ya nje ya mtandao' : 'Offline Mode'}
+        </div>
+      )}
 
       <Container fluid className="mt-4">
         <Row>
@@ -248,16 +303,24 @@ export default function Home() {
         </Modal.Body>
       </Modal>
 
-      <footer className="bg-dark text-white mt-5 py-4">
+      <footer className="bg-dark text-white mt-5 py-4 lamba-pattern">
         <Container>
           <Row>
             <Col md={6}>
-              <h5>Salama Medical Training Portal</h5>
-              <p>Empowering healthcare workers in Madagascar district hospitals</p>
+              <h5>🏥 Salama Medical Training Portal</h5>
+              <p>
+                {mounted && language === 'ko' ? '마다가스카르 지역 병원 의료진 역량 강화' :
+                 mounted && language === 'sw' ? 'Kuwawezesha wafanyakazi wa afya katika hospitali za wilaya za Madagascar' :
+                 'Empowering healthcare workers in Madagascar district hospitals'}
+              </p>
             </Col>
             <Col md={6} className="text-md-end">
-              <p>Email: support@salama-training.org</p>
-              <p>Phone: +261 XX XXX XXXX</p>
+              <p>
+                {mounted && language === 'ko' ? '이메일' : mounted && language === 'sw' ? 'Barua pepe' : 'Email'}: support@salama-training.org
+              </p>
+              <p>
+                {mounted && language === 'ko' ? '전화' : mounted && language === 'sw' ? 'Simu' : 'Phone'}: +261 XX XXX XXXX
+              </p>
             </Col>
           </Row>
         </Container>

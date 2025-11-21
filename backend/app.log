@@ -1,0 +1,73 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5008
+ * Running on http://192.168.0.34:5008
+Press CTRL+C to quit
+ * Restarting with watchdog (inotify)
+ * Debugger is active!
+ * Debugger PIN: 105-931-191
+127.0.0.1 - - [20/Nov/2025 17:57:32] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:32] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:32] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:32] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:35] "GET /api/cards?category_id=5 HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:35] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:36] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:57:36] "GET /api/cards?category_id=8 HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:08] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:08] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:09] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:09] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:13] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:13] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:13] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:13] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:50] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:50] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:50] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 17:58:50] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:02:53] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:02:53] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:02:53] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:02:53] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:03:27] "GET /api/cards?category_id=8 HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:03:27] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:03:33] "POST /api/admin/login HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:03:33] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:03:33] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:03:33] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:09] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:09] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:09] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:09] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:13] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:13] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:14] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:05:14] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:11:58] "POST /api/admin/login HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:11:58] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:11:58] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:11:58] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:12:07] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:12:07] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:12:08] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:12:08] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:01] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:01] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:01] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:01] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:06] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:06] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:06] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:16:06] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:19:21] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:19:21] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:19:21] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:19:21] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:20:36] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:20:36] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:20:36] "GET /api/cards HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 18:20:36] "GET /api/categories HTTP/1.1" 200 -
+127.0.0.1 - - [21/Nov/2025 18:24:50] "HEAD /api/categories HTTP/1.1" 200 -

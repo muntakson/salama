@@ -175,8 +175,9 @@ export default function Home() {
               className="me-2"
               onClick={toggleHighContrast}
               title="Toggle High Contrast Mode"
+              suppressHydrationWarning
             >
-              {highContrast ? '🌙' : '☀️'}
+              {mounted && highContrast ? '🌙' : '☀️'}
             </Button>
             <Form.Select
               value={language}
@@ -308,7 +309,7 @@ export default function Home() {
           <Row>
             <Col md={6}>
               <h5>🏥 Salama Medical Training Portal</h5>
-              <p>
+              <p suppressHydrationWarning>
                 {mounted && language === 'ko' ? '마다가스카르 지역 병원 의료진 역량 강화' :
                  mounted && language === 'sw' ? 'Kuwawezesha wafanyakazi wa afya katika hospitali za wilaya za Madagascar' :
                  'Empowering healthcare workers in Madagascar district hospitals'}

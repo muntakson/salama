@@ -25,6 +25,9 @@ export interface TrainingCard {
   image_url?: string;
   video_url?: string;
   audio_url?: string;
+  pdf_url?: string;
+  video_urls?: string | string[];
+  audio_urls?: string | string[];
   view_count: number;
   like_count: number;
   comment_count?: number;

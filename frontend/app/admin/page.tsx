@@ -24,6 +24,7 @@ const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cards, setCards] = useState<TrainingCard[]>([]);
@@ -54,17 +55,62 @@ export default function AdminDashboard() {
     image_url: '',
     video_url: '',
     audio_url: '',
+    pdf_url: '',
+    video_urls: [] as string[],
+    audio_urls: [] as string[],
   });
 
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [alert, setAlert] = useState<{type: string; message: string} | null>(null);
 
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const storedToken = localStorage.getItem('admin_session_token');
+      if (storedToken) {
+        try {
+          const response = await axios.post('/api/admin/verify', {
+            session_token: storedToken
+          });
+          if (response.data.valid) {
+            setSessionToken(storedToken);
+            setIsLoggedIn(true);
+          } else {
+            // Invalid token, clear it
+            localStorage.removeItem('admin_session_token');
+          }
+        } catch (error) {
+          // Token verification failed
+          localStorage.removeItem('admin_session_token');
+        }
+      }
+    };
+    checkSession();
+  }, []);
+
   useEffect(() => {
     if (isLoggedIn) {
       loadData();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    // Check if there's an edit parameter in URL
+    if (isLoggedIn && cards.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const editId = urlParams.get('edit');
+      if (editId) {
+        const cardToEdit = cards.find(c => c.id === parseInt(editId));
+        if (cardToEdit) {
+          setActiveTab('cards');
+          editCard(cardToEdit);
+          // Clear the URL parameter
+          window.history.replaceState({}, '', '/admin');
+        }
+      }
+    }
+  }, [isLoggedIn, cards]);
 
   const loadData = async () => {
     try {
@@ -86,11 +132,28 @@ export default function AdminDashboard() {
     try {
       const response = await axios.post('/api/admin/login', { password });
       if (response.data.success) {
+        const token = response.data.session_token;
+        setSessionToken(token);
+        localStorage.setItem('admin_session_token', token);
         setIsLoggedIn(true);
         setPassword('');
       }
     } catch (error) {
       showAlert('danger', 'Invalid password');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (sessionToken) {
+        await axios.post('/api/admin/logout', { session_token: sessionToken });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('admin_session_token');
+      setSessionToken(null);
+      setIsLoggedIn(false);
     }
   };
 
@@ -189,6 +252,18 @@ export default function AdminDashboard() {
 
   const editCard = (card: TrainingCard) => {
     setEditingCard(card);
+
+    // Parse video_urls and audio_urls if they are JSON strings
+    let videoUrls: string[] = [];
+    let audioUrls: string[] = [];
+
+    if (card.video_urls) {
+      videoUrls = typeof card.video_urls === 'string' ? JSON.parse(card.video_urls) : card.video_urls;
+    }
+    if (card.audio_urls) {
+      audioUrls = typeof card.audio_urls === 'string' ? JSON.parse(card.audio_urls) : card.audio_urls;
+    }
+
     setCardForm({
       title: card.title,
       title_swahili: card.title_swahili || '',
@@ -202,6 +277,9 @@ export default function AdminDashboard() {
       image_url: card.image_url || '',
       video_url: card.video_url || '',
       audio_url: card.audio_url || '',
+      pdf_url: card.pdf_url || '',
+      video_urls: videoUrls,
+      audio_urls: audioUrls,
     });
     setShowCardModal(true);
   };
@@ -221,12 +299,15 @@ export default function AdminDashboard() {
       image_url: '',
       video_url: '',
       audio_url: '',
+      pdf_url: '',
+      video_urls: [],
+      audio_urls: [],
     });
   };
 
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'image' | 'video' | 'audio'
+    type: 'image' | 'video' | 'audio' | 'pdf'
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -246,6 +327,8 @@ export default function AdminDashboard() {
         setCardForm({ ...cardForm, video_url: response.data.url });
       } else if (type === 'audio') {
         setCardForm({ ...cardForm, audio_url: response.data.url });
+      } else if (type === 'pdf') {
+        setCardForm({ ...cardForm, pdf_url: response.data.url });
       }
 
       showAlert('success', 'File uploaded successfully');
@@ -253,6 +336,50 @@ export default function AdminDashboard() {
       showAlert('danger', 'Error uploading file');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleMultipleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'video' | 'audio'
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const currentUrls = type === 'video' ? cardForm.video_urls : cardForm.audio_urls;
+    if (currentUrls.length >= 5) {
+      showAlert('warning', `Maximum 5 ${type}s allowed`);
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(`/api/upload/${type}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (type === 'video') {
+        setCardForm({ ...cardForm, video_urls: [...cardForm.video_urls, response.data.url] });
+      } else if (type === 'audio') {
+        setCardForm({ ...cardForm, audio_urls: [...cardForm.audio_urls, response.data.url] });
+      }
+
+      showAlert('success', 'File uploaded successfully');
+    } catch (error) {
+      showAlert('danger', 'Error uploading file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeMultipleFile = (index: number, type: 'video' | 'audio') => {
+    if (type === 'video') {
+      setCardForm({ ...cardForm, video_urls: cardForm.video_urls.filter((_, i) => i !== index) });
+    } else {
+      setCardForm({ ...cardForm, audio_urls: cardForm.audio_urls.filter((_, i) => i !== index) });
     }
   };
 
@@ -299,9 +426,14 @@ export default function AdminDashboard() {
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Admin Dashboard</h2>
-        <Button variant="outline-primary" href="/">
-          Back to Home
-        </Button>
+        <div>
+          <Button variant="outline-secondary" className="me-2" onClick={handleLogout}>
+            Logout
+          </Button>
+          <Button variant="outline-primary" href="/">
+            Back to Home
+          </Button>
+        </div>
       </div>
 
       <Tab.Container activeKey={activeTab} onSelect={(k) => k && setActiveTab(k)}>
@@ -720,7 +852,7 @@ export default function AdminDashboard() {
             </Form.Group>
 
             <Row>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Image Upload</Form.Label>
                   <Form.Control
@@ -736,9 +868,26 @@ export default function AdminDashboard() {
                   )}
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Video Upload (MP4)</Form.Label>
+                  <Form.Label>PDF Upload (User Manual)</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e: any) => handleFileUpload(e, 'pdf')}
+                    disabled={uploading}
+                  />
+                  {cardForm.pdf_url && (
+                    <small className="text-success d-block mt-1">PDF uploaded</small>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Video Upload (Legacy - Single)</Form.Label>
                   <Form.Control
                     type="file"
                     accept="video/mp4"
@@ -750,9 +899,9 @@ export default function AdminDashboard() {
                   )}
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Audio Upload (MP3)</Form.Label>
+                  <Form.Label>Audio Upload (Legacy - Single)</Form.Label>
                   <Form.Control
                     type="file"
                     accept="audio/*"
@@ -761,6 +910,65 @@ export default function AdminDashboard() {
                   />
                   {cardForm.audio_url && (
                     <small className="text-success d-block mt-1">Audio uploaded</small>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Multiple Videos (up to 5) - Different Languages</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="video/mp4"
+                    onChange={(e: any) => handleMultipleFileUpload(e, 'video')}
+                    disabled={uploading || cardForm.video_urls.length >= 5}
+                  />
+                  <small className="text-muted">Uploaded: {cardForm.video_urls.length}/5</small>
+                  {cardForm.video_urls.length > 0 && (
+                    <div className="mt-2">
+                      {cardForm.video_urls.map((url, idx) => (
+                        <div key={idx} className="d-flex align-items-center mb-1">
+                          <small className="text-success flex-grow-1">Video {idx + 1}</small>
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() => removeMultipleFile(idx, 'video')}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Multiple Audios (up to 5) - Different Languages</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e: any) => handleMultipleFileUpload(e, 'audio')}
+                    disabled={uploading || cardForm.audio_urls.length >= 5}
+                  />
+                  <small className="text-muted">Uploaded: {cardForm.audio_urls.length}/5</small>
+                  {cardForm.audio_urls.length > 0 && (
+                    <div className="mt-2">
+                      {cardForm.audio_urls.map((url, idx) => (
+                        <div key={idx} className="d-flex align-items-center mb-1">
+                          <small className="text-success flex-grow-1">Audio {idx + 1}</small>
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() => removeMultipleFile(idx, 'audio')}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </Form.Group>
               </Col>

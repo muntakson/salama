@@ -25,11 +25,29 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [fullScreenCard, setFullScreenCard] = useState<TrainingCardType | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    checkAdminSession();
     loadCategories();
     loadCards();
   }, [selectedCategory, searchQuery]);
+
+  const checkAdminSession = async () => {
+    const sessionToken = localStorage.getItem('admin_session_token');
+    if (sessionToken) {
+      try {
+        const response = await axios.post('/api/admin/verify', {
+          session_token: sessionToken
+        });
+        if (response.data.valid) {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -168,6 +186,7 @@ export default function Home() {
                       onFullScreen={setFullScreenCard}
                       onLike={handleLike}
                       onComment={handleComment}
+                      isAdmin={isAdmin}
                     />
                   </Col>
                 ))}
@@ -223,6 +242,7 @@ export default function Home() {
               onFullScreen={() => {}}
               onLike={handleLike}
               onComment={handleComment}
+              isAdmin={isAdmin}
             />
           )}
         </Modal.Body>

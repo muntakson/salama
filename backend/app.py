@@ -5,14 +5,26 @@ import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import json
+import secrets
+import hashlib
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
+# Configure Flask to not escape non-ASCII characters in JSON
+app.config['JSON_AS_ASCII'] = False
+
+# Admin session storage (in-memory for simplicity)
+# In production, use Redis or database
+ADMIN_SESSIONS = set()
+
 # Configuration
 DATABASE = 'medical_training.db'
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'wav'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'wav', 'm4a', 'pdf'}
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
+GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
@@ -224,16 +236,22 @@ def create_card():
     conn = get_db()
     cursor = conn.cursor()
 
+    # Convert video and audio lists to JSON strings
+    video_urls = json.dumps(data.get('video_urls', [])) if isinstance(data.get('video_urls'), list) else data.get('video_urls', '[]')
+    audio_urls = json.dumps(data.get('audio_urls', [])) if isinstance(data.get('audio_urls'), list) else data.get('audio_urls', '[]')
+
     cursor.execute('''
         INSERT INTO training_cards
         (title, title_swahili, title_korean, category_id, content_provider, target_audience,
-         difficulty_level, markdown_text, html_content, image_url, video_url, audio_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         difficulty_level, markdown_text, html_content, image_url, video_url, audio_url,
+         pdf_url, video_urls, audio_urls)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         data['title'], data.get('title_swahili'), data.get('title_korean'),
         data.get('category_id'), data.get('content_provider'), data.get('target_audience'),
         data.get('difficulty_level'), data.get('markdown_text'), data.get('html_content'),
-        data.get('image_url'), data.get('video_url'), data.get('audio_url')
+        data.get('image_url'), data.get('video_url'), data.get('audio_url'),
+        data.get('pdf_url'), video_urls, audio_urls
     ))
 
     conn.commit()
@@ -247,17 +265,23 @@ def update_card(card_id):
     conn = get_db()
     cursor = conn.cursor()
 
+    # Convert video and audio lists to JSON strings
+    video_urls = json.dumps(data.get('video_urls', [])) if isinstance(data.get('video_urls'), list) else data.get('video_urls', '[]')
+    audio_urls = json.dumps(data.get('audio_urls', [])) if isinstance(data.get('audio_urls'), list) else data.get('audio_urls', '[]')
+
     cursor.execute('''
         UPDATE training_cards
         SET title=?, title_swahili=?, title_korean=?, category_id=?, content_provider=?,
             target_audience=?, difficulty_level=?, markdown_text=?, html_content=?,
-            image_url=?, video_url=?, audio_url=?, updated_at=CURRENT_TIMESTAMP
+            image_url=?, video_url=?, audio_url=?, pdf_url=?, video_urls=?, audio_urls=?,
+            updated_at=CURRENT_TIMESTAMP
         WHERE id=?
     ''', (
         data['title'], data.get('title_swahili'), data.get('title_korean'),
         data.get('category_id'), data.get('content_provider'), data.get('target_audience'),
         data.get('difficulty_level'), data.get('markdown_text'), data.get('html_content'),
-        data.get('image_url'), data.get('video_url'), data.get('audio_url'), card_id
+        data.get('image_url'), data.get('video_url'), data.get('audio_url'),
+        data.get('pdf_url'), video_urls, audio_urls, card_id
     ))
 
     conn.commit()
@@ -346,6 +370,8 @@ def upload_file(file_type):
             subfolder = 'videos'
         elif file_type == 'audio':
             subfolder = 'audios'
+        elif file_type == 'pdf':
+            subfolder = 'pdfs'
 
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], subfolder, filename)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -400,9 +426,112 @@ def get_stats():
 def admin_login():
     data = request.json
     if data.get('password') == 'q1':
-        return jsonify({'success': True, 'message': 'Login successful'})
+        # Generate session token
+        session_token = secrets.token_urlsafe(32)
+        ADMIN_SESSIONS.add(session_token)
+        return jsonify({
+            'success': True,
+            'message': 'Login successful',
+            'session_token': session_token
+        })
     return jsonify({'success': False, 'message': 'Invalid password'}), 401
+
+@app.route('/api/admin/verify', methods=['POST'])
+def verify_admin_session():
+    data = request.json
+    session_token = data.get('session_token')
+    if session_token and session_token in ADMIN_SESSIONS:
+        return jsonify({'valid': True})
+    return jsonify({'valid': False}), 401
+
+@app.route('/api/admin/logout', methods=['POST'])
+def admin_logout():
+    data = request.json
+    session_token = data.get('session_token')
+    if session_token and session_token in ADMIN_SESSIONS:
+        ADMIN_SESSIONS.discard(session_token)
+    return jsonify({'success': True})
+
+@app.route('/api/ai/chat', methods=['POST'])
+def ai_chat():
+    data = request.json
+    user_question = data.get('question', '')
+    card_context = data.get('card_context', {})
+
+    if not user_question:
+        return jsonify({'error': 'Question is required'}), 400
+
+    # Build context from the training card
+    context_text = f"""You are a helpful medical device training assistant.
+You are answering questions about: {card_context.get('title', 'a medical device')}.
+
+Device Category: {card_context.get('category_name', 'N/A')}
+Content Provider: {card_context.get('content_provider', 'N/A')}
+Target Audience: {card_context.get('target_audience', 'Healthcare workers')}
+Difficulty Level: {card_context.get('difficulty_level', 'N/A')}
+
+Additional Information:
+{card_context.get('markdown_text', '')}
+
+User Question: {user_question}
+
+Please provide a clear, concise, and helpful answer about this medical device. Focus on practical, actionable information for healthcare workers in Madagascar district hospitals."""
+
+    try:
+        response = requests.post(
+            GROQ_API_URL,
+            headers={
+                'Authorization': f'Bearer {GROQ_API_KEY}',
+                'Content-Type': 'application/json'
+            },
+            json={
+                'model': 'llama-3.3-70b-versatile',
+                'messages': [
+                    {
+                        'role': 'system',
+                        'content': '''You are a helpful medical device training assistant for healthcare workers in Madagascar district hospitals. Provide clear, practical answers about medical equipment usage, maintenance, and troubleshooting.
+
+IMPORTANT LANGUAGE GUIDELINES:
+- When responding in Korean, use ONLY Hangul (한글) characters
+- Do NOT mix Chinese characters (漢字/한자) with Korean unless absolutely necessary for technical medical terms that have no Korean equivalent
+- Use pure Korean vocabulary whenever possible
+- Avoid Sino-Korean words written in Chinese characters
+- Write in clear, simple Korean that healthcare workers can easily understand
+
+When responding in other languages:
+- English: Use simple, clear English
+- Swahili: Use standard Swahili vocabulary
+- Always prioritize clarity and practical information over complex terminology'''
+                    },
+                    {
+                        'role': 'user',
+                        'content': context_text
+                    }
+                ],
+                'temperature': 0.7,
+                'max_tokens': 1024
+            },
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            ai_response = response.json()
+            answer = ai_response['choices'][0]['message']['content']
+            return jsonify({
+                'success': True,
+                'answer': answer
+            })
+        else:
+            return jsonify({
+                'error': f'Groq API error: {response.status_code}',
+                'details': response.text
+            }), 500
+
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'Request timeout. Please try again.'}), 504
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=5008, debug=True)
+    app.run(host='0.0.0.0', port=5045, debug=True)
